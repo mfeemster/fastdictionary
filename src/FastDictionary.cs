@@ -98,6 +98,7 @@ namespace Dictionary
         private Entry[] _entries;
 
         private int _capacity;
+		private int _capacityM1;
 
         private int _initialCapacity; // This is the initial capacity of the dictionary, we will never shrink beyond this point.
         private int _size; // This is the real counter of how many items are in the hash-table (regardless of buckets)
@@ -158,6 +159,7 @@ namespace Dictionary
 
             this._initialCapacity = DictionaryHelper.NextPowerOf2(initialBucketCount);
             this._capacity = Math.Max(src._capacity, initialBucketCount);
+			this._capacityM1 = this._capacity - 1;
             this._size = src._size;
             this._numberOfUsed = src._numberOfUsed;
             this._numberOfDeleted = src._numberOfDeleted;
@@ -208,7 +210,7 @@ namespace Dictionary
             BlockCopyMemoryHelper.Memset(this._entries, new Entry(kUnusedHash, default(TKey), default(TValue)));
 
             this._capacity = newCapacity;
-
+			this._capacityM1 = this._capacity - 1;
             this._numberOfUsed = 0;
             this._numberOfDeleted = 0;
             this._size = 0;
@@ -231,7 +233,7 @@ namespace Dictionary
             ResizeIfNeeded();
 
             int hash = GetInternalHashCode(key);
-            int bucket = hash % _capacity;
+            int bucket = hash & _capacityM1;
 
             uint uhash = (uint)hash;
             int numProbes = 1;
@@ -249,7 +251,7 @@ namespace Dictionary
                 if (nHash == uhash && comparer.Equals(_entries[bucket].Key, key))
                    throw new ArgumentException("Cannot add duplicated key.", "key");
                 
-                bucket = (bucket + numProbes) % _capacity;
+                bucket = (bucket + numProbes) & _capacityM1;
                 numProbes++;
             }
             while (true);
@@ -334,7 +336,7 @@ namespace Dictionary
                 Contract.Ensures(this._numberOfUsed <= this._capacity);
 
                 int hash = GetInternalHashCode(key);
-                int bucket = hash % _capacity;
+                int bucket = hash & _capacityM1;
 
                 var entries = _entries;
 
@@ -346,7 +348,7 @@ namespace Dictionary
                     if (nHash == hash && comparer.Equals(entries[bucket].Key, key))
                         return entries[bucket].Value;
 
-                    bucket = (bucket + numProbes) % _capacity;
+                    bucket = (bucket + numProbes) & _capacityM1;
                     numProbes++;
 
                     Debug.Assert(numProbes < 100);
@@ -364,7 +366,7 @@ namespace Dictionary
                 ResizeIfNeeded();
 
                 int hash = GetInternalHashCode(key);
-                int bucket = hash % _capacity;
+                int bucket = hash & _capacityM1;
 
                 uint uhash = (uint)hash;
                 int numProbes = 1;
@@ -382,7 +384,7 @@ namespace Dictionary
                     if (nHash == uhash && comparer.Equals(_entries[bucket].Key, key))
                         goto SET;
                     
-                    bucket = (bucket + numProbes) % _capacity;
+                    bucket = (bucket + numProbes) & _capacityM1;
                     numProbes++;
 
                     Debug.Assert(numProbes < 100);
@@ -434,7 +436,7 @@ namespace Dictionary
             Contract.Ensures(this._numberOfUsed <= this._capacity);
 
             int hash = GetInternalHashCode(key);
-            int bucket = hash % _capacity;
+            int bucket = hash & _capacityM1;
 
             var entries = _entries;
 
@@ -449,7 +451,7 @@ namespace Dictionary
                     return true;
                 }
 
-                bucket = (bucket + numProbes) % _capacity;
+                bucket = (bucket + numProbes) & _capacityM1;
                 numProbes++;
 
                 Debug.Assert(numProbes < 100);
@@ -470,7 +472,7 @@ namespace Dictionary
         private int Lookup(TKey key)
         {
             int hash = GetInternalHashCode(key);
-            int bucket = hash % _capacity;
+            int bucket = hash & _capacityM1;
 
             var entries = _entries;
 
@@ -484,7 +486,7 @@ namespace Dictionary
                 if (nHash == hash && comparer.Equals(entries[bucket].Key, key))
                     return bucket;
 
-                bucket = (int)((bucket + numProbes) % _capacity);
+                bucket = (int)((bucket + numProbes) & _capacityM1);
                 numProbes++;
 
                 Debug.Assert(numProbes < 100);
@@ -505,20 +507,22 @@ namespace Dictionary
             uint capacity = (uint)entries.Length;
 
             var size = 0;
-
+            this._capacity = entries.Length;
+            this._capacityM1 = this._capacity - 1;
+			
             for (int it = 0; it < _entries.Length; it++)
             {
                 uint hash = _entries[it].Hash;
                 if (hash >= kDeletedHash) // No interest for the process of rehashing, we are skipping it.
                     continue;
 
-                uint bucket = hash % capacity;
+                uint bucket = hash & (uint)_capacityM1;//% capacity;
 
                 uint numProbes = 0;
                 while (!(entries[bucket].Hash == kUnusedHash))
                 {
                     numProbes++;
-                    bucket = (bucket + numProbes) % capacity;
+                    bucket = (bucket + numProbes) & (uint)_capacityM1;//% capacity;
                 }
 
                 entries[bucket].Hash = hash;
@@ -528,7 +532,6 @@ namespace Dictionary
                 size++;
             }
 
-            this._capacity = entries.Length;
             this._size = size;
             this._entries = entries;
 

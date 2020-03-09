@@ -46,9 +46,10 @@ namespace Dictionary
         private static long BenchmarkNativeDictionary(int[] tuples, int tries)
         {
             var native = Stopwatch.StartNew();
+            Dictionary<int, int> nativeDict = new Dictionary<int, int>(tuples.Length * 2);
+			
             for (int i = 0; i < tries; i++)
             {
-                Dictionary<int, int> nativeDict = new Dictionary<int, int>(tuples.Length * 2);
                 for (int j = 0; j < tuples.Length; j++)
                     nativeDict[tuples[j]] = j;
 
@@ -58,7 +59,8 @@ namespace Dictionary
                     k = nativeDict[tuples[j]];
                     k++;
                 }
-                    
+                
+				//nativeDict.Clear();//If clearing is enabled, the native dictionary is faster.
             }
             native.Stop();
             return native.ElapsedMilliseconds;
@@ -67,9 +69,10 @@ namespace Dictionary
         private static long BenchmarkNativeDictionaryString(string[] tuples, int tries)
         {
             var native = Stopwatch.StartNew();
+            var nativeDict = new Dictionary<string, int>(tuples.Length * 2);
+			
             for (int i = 0; i < tries; i++)
             {
-                var nativeDict = new Dictionary<string, int>(tuples.Length * 2);
                 for (int j = 0; j < tuples.Length; j++)
                     nativeDict[tuples[j]] = j;
 
@@ -79,7 +82,8 @@ namespace Dictionary
                     k = nativeDict[tuples[j]];
                     k++;
                 }
-                    
+                
+                //nativeDict.Clear();
             }
             native.Stop();
             return native.ElapsedMilliseconds;
@@ -89,9 +93,10 @@ namespace Dictionary
         {
             int y = 0;
             var native = Stopwatch.StartNew();
+            var nativeDict = new Dictionary<int, string>(tuples.Length * 2);
+			
             for (int i = 0; i < tries; i++)
             {
-                var nativeDict = new Dictionary<int, string>(tuples.Length * 2);
                 for (int j = 0; j < tuples.Length; j++)
                     nativeDict[j] = tuples[j];
 
@@ -103,7 +108,7 @@ namespace Dictionary
                         y++;
                 }
                     
-                    
+                //nativeDict.Clear();
             }
             native.Stop();
             return native.ElapsedMilliseconds;
@@ -112,9 +117,10 @@ namespace Dictionary
         private static long BenchmarkFastDictionary(int[] tuples, int tries)
         {
             var fast = Stopwatch.StartNew();
+            var fastDict = new FastDictionary<int, int>(tuples.Length * 2);
+			
             for (int i = 0; i < tries; i++)
             {
-                var fastDict = new FastDictionary<int, int>(tuples.Length * 2);
                 for (int j = 0; j < tuples.Length; j++)
                     fastDict[tuples[j]] = j;
 
@@ -126,7 +132,7 @@ namespace Dictionary
                     k++;
                 }
 
-                
+                //fastDict.Clear();
             }
             fast.Stop(); 
             return fast.ElapsedMilliseconds;
@@ -136,9 +142,10 @@ namespace Dictionary
         private static long BenchmarkFastDictionaryString(string[] tuples, int tries)
         {
             var fast = Stopwatch.StartNew();
+            var fastDict = new FastDictionary<string, int>(tuples.Length * 2);
+			
             for (int i = 0; i < tries; i++)
             {
-                var fastDict = new FastDictionary<string, int>(tuples.Length * 2);
                 for (int j = 0; j < tuples.Length; j++)
                     fastDict[tuples[j]] = j;
 
@@ -149,7 +156,8 @@ namespace Dictionary
                     // k = fastDict[tuples[j]];
                     k++;
                 }
-                    
+				
+				//fastDict.Clear();
             }
             fast.Stop();
             return fast.ElapsedMilliseconds;
@@ -160,9 +168,10 @@ namespace Dictionary
         {
             int y = 0;
             var fast = Stopwatch.StartNew();
+            var fastDict = new FastDictionary<int, string>(tuples.Length * 2);
+			
             for (int i = 0; i < tries; i++)
             {
-                var fastDict = new FastDictionary<int, string>(tuples.Length * 2);
                 for (int j = 0; j < tuples.Length; j++)
                     fastDict[j] = tuples[j];
 
@@ -174,7 +183,8 @@ namespace Dictionary
                     if (k != null)
                         y++;
                 }
-                    
+                
+                //fastDict.Clear();
             }
             fast.Stop();
             return fast.ElapsedMilliseconds;
